@@ -1,0 +1,14 @@
+# חומרי הקורס עצמם לא נכנסים למאגר — רק מה שנכתב כאן
+*.docx
+*.pdf
+*.pptx
+*.mp3
+*.mpeg
+*.mp4
+*.wav
+*.srt
+
+# פלטי ביניים
+__pycache__/
+*.pyc
+artifact-build/

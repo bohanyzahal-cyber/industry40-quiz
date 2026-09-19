@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>בוחן תרגול Industry 4.0</title>
+<style>
+:root{
+  --bg:#f7f6f3; --surface:#ffffff; --surface2:#f1efe8; --text:#1f1f1d; --muted:#6b6b66;
+  --border:#e3e1da; --borderS:#cfccc2; --accent:#0f766e; --accentSoft:#e3f3f1;
+  --okBg:#e6f4ea; --okBd:#9bd3ad; --okTx:#1a6b1a;
+  --errBg:#fceaea; --errBd:#e6a3a3; --errTx:#b23030;
+  --warnTx:#854f0b; --warnBg:#faeeda;
+  --clsTx:#0f6e56; --clsBg:#e1f5ee;
+  --chipBg:#efeee9;
+  color-scheme:light;
+}
+/* ערכת צבעים: ברירת המחדל לפי המערכת; בחירה מפורשת (כפתור המצב או המארח) נכתבת
+   כ-data-theme על שורש המסמך וגוברת עליה בשני הכיוונים. */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#1a1a18; --surface:#242421; --surface2:#2f2f2c; --text:#ececea; --muted:#a3a39c;
+    --border:#37372f; --borderS:#4a4a46; --accent:#2ea6a0; --accentSoft:#12302e;
+    --okBg:#16331f; --okBd:#2f6b3f; --okTx:#7fd49a;
+    --errBg:#3a1d1d; --errBd:#7a3535; --errTx:#e89393;
+    --warnTx:#fac775; --warnBg:#4a2b06;
+    --clsTx:#9fe1cb; --clsBg:#0d4438;
+    --chipBg:#2f2f2a;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1a1a18; --surface:#242421; --surface2:#2f2f2c; --text:#ececea; --muted:#a3a39c;
+  --border:#37372f; --borderS:#4a4a46; --accent:#2ea6a0; --accentSoft:#12302e;
+  --okBg:#16331f; --okBd:#2f6b3f; --okTx:#7fd49a;
+  --errBg:#3a1d1d; --errBd:#7a3535; --errTx:#e89393;
+  --warnTx:#fac775; --warnBg:#4a2b06;
+  --clsTx:#9fe1cb; --clsBg:#0d4438;
+  --chipBg:#2f2f2a;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:'Segoe UI',Arial,'Helvetica Neue',sans-serif;font-size:16px;line-height:1.65;
+  overflow-wrap:break-word;-webkit-text-size-adjust:100%;}
+.wrap{max-width:820px;margin:0 auto;padding:22px 20px 60px;}
+header h1{font-size:23px;margin:0 0 4px;font-weight:650;}
+header .sub{color:var(--muted);font-size:13.5px;margin-bottom:16px;}
+/* קישור לחוברת החומר הפתוח */
+.aids{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.aid{display:inline-flex;align-items:center;gap:8px;text-decoration:none;
+  background:var(--chipBg);border:1px solid var(--border);border-radius:10px;
+  padding:9px 14px;color:var(--text);font-size:13.5px;transition:.15s;flex:1 1 260px;}
+.aid:hover{border-color:var(--accent);}
+.aid b{font-weight:650;}
+.aid i{font-style:normal;font-size:16px;line-height:1;flex:none;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:22px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.scopehint{font-size:12.5px;color:var(--muted);margin:-6px 0 12px;padding-right:2px;}
+.toolbar{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:12px;}
+.chip{background:var(--chipBg);border:1px solid var(--border);color:var(--text);
+  border-radius:999px;padding:6px 13px;font-size:13px;cursor:pointer;transition:.15s;font-family:inherit;}
+.chip:hover{border-color:var(--accent);}
+.chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.chip small{opacity:.75;font-size:11px;}
+.lbl{font-size:12px;color:var(--muted);margin-left:4px;align-self:center;min-width:44px;}
+.spacer{flex:1;}
+.iconbtn{background:var(--chipBg);border:1px solid var(--border);color:var(--text);
+  border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit;}
+.iconbtn:hover{border-color:var(--accent);}
+.note{background:var(--accentSoft);border:1px solid var(--border);border-radius:10px;
+  padding:11px 14px;font-size:13px;margin-bottom:14px;}
+.note b{color:var(--accent);}
+.stats{display:flex;gap:16px;flex-wrap:wrap;font-size:13.5px;margin-bottom:12px;color:var(--muted);}
+.stats b{color:var(--text);}
+.bar{height:7px;background:var(--chipBg);border-radius:999px;overflow:hidden;margin-bottom:18px;}
+.bar>i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s;}
+.qmeta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.pill{font-size:11px;padding:3px 9px;border-radius:999px;background:var(--surface2);color:var(--muted);}
+.qtext{font-size:17.5px;font-weight:600;margin-bottom:15px;line-height:1.6;}
+.opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--borderS);
+  border-radius:10px;padding:12px 14px;margin-bottom:9px;cursor:pointer;transition:.12s;
+  background:var(--surface);width:100%;text-align:right;font:inherit;color:var(--text);}
+.opt:hover{border-color:var(--accent);background:var(--accentSoft);}
+.opt .ltr{font-weight:700;color:var(--accent);min-width:19px;}
+.opt.correct{background:var(--okBg);border-color:var(--okBd);}
+.opt.correct .ltr{color:var(--okTx);}
+.opt.wrong{background:var(--errBg);border-color:var(--errBd);}
+.opt.wrong .ltr{color:var(--errTx);}
+.opt.locked{cursor:default;}
+.opt.locked:hover{background:var(--surface);border-color:var(--borderS);}
+.opt.correct.locked:hover{background:var(--okBg);border-color:var(--okBd);}
+.opt.wrong.locked:hover{background:var(--errBg);border-color:var(--errBd);}
+/* במצב מבחן אין משוב עד ההגשה — הבחירה מסומנת בצבע ההדגשה,
+   באותה שפה חזותית של "נענתה" במפת השאלות. ירוק אומר "נכון". */
+.opt.picked{background:var(--accentSoft);border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);}
+.opt.picked .ltr{color:var(--accent);}
+.opt.picked:hover{background:var(--accentSoft);border-color:var(--accent);}
+.opt.picked .ltr::after{content:" ✓";font-size:12px;}
+.expl{margin-top:8px;padding:13px 15px;border-radius:10px;background:var(--accentSoft);
+  border:1px solid var(--border);font-size:14px;}
+.expl .tag{font-weight:700;color:var(--accent);}
+.nav{display:flex;gap:10px;margin-top:16px;}
+.btn{flex:1;background:var(--chipBg);border:1px solid var(--border);color:var(--text);
+  border-radius:10px;padding:12px;font-size:15px;cursor:pointer;font-family:inherit;}
+.btn:hover{border-color:var(--accent);}
+.btn-pri{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.palette{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;max-height:190px;overflow-y:auto;}
+.pbtn{width:33px;height:33px;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface);color:var(--muted);font-size:12.5px;cursor:pointer;font-family:inherit;}
+.pbtn.cur{outline:2px solid var(--accent);outline-offset:1px;}
+.pbtn.ok{background:var(--okBg);border-color:var(--okBd);color:var(--okTx);}
+.pbtn.bad{background:var(--errBg);border-color:var(--errBd);color:var(--errTx);}
+.pbtn.ans{background:var(--accentSoft);border-color:var(--accent);color:var(--accent);}
+.ptitle{font-size:12.5px;color:var(--muted);margin-bottom:7px;}
+.result{text-align:center;}
+.result .big{font-size:46px;font-weight:800;color:var(--accent);line-height:1.1;}
+.result .grade{font-size:17px;margin:8px 0 16px;}
+.clock{font-variant-numeric:tabular-nums;font-weight:650;}
+.rev{border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:var(--surface2);font-size:14px;text-align:right;}
+.rev .rq{font-weight:600;margin-bottom:6px;}
+.rev .ra{color:var(--errTx);}
+.rev .rc{color:var(--okTx);}
+@media (max-width:540px){
+  .wrap{padding:16px 16px 48px;} .card{padding:16px;} .qtext{font-size:16px;}
+  header h1{font-size:19px;} .pbtn{width:29px;height:29px;font-size:11.5px;}
+  .opt{padding:11px 12px;} .stats{gap:11px;font-size:13px;}
+}
+
+/* ---------- תצוגת הדפסה של השאלות ---------- */
+/* דף נפרד מהאפליקציה: הכל נפרש ברצף, בלי אינטראקציה, ובצפיפות
+   שמתאימה לנייר. המבחן פתוח-חומר ולכן זה נועד להיכנס איתו לכיתה. */
+#print{display:none;}
+.pq{break-inside:avoid;margin-bottom:9px;}
+.pq .pn{font-weight:700;color:var(--accent);}
+.pq .po{margin:1px 0 0 0;padding-right:15px;}
+.pq .pa{color:var(--okTx);font-weight:600;}
+.pq .pe{color:var(--muted);}
+.prhead{display:none;}
+@media print{
+  @page{size:A4;margin:11mm 10mm;}
+  html,body{background:#fff!important;color:#000!important;}
+  :root{--accent:#1a4f8a!important;--muted:#444!important;--okTx:#0a5c22!important;--border:#bbb!important;}
+  .wrap{max-width:none;padding:0;}
+  header,#app,.foot{display:none!important;}
+  #print{display:block!important;font-size:9.6pt;line-height:1.34;}
+  #print.cols{column-count:2;column-gap:8mm;column-rule:1px solid #ccc;}
+  .prhead{display:block;border-bottom:1.5px solid #000;padding-bottom:2mm;
+    margin-bottom:3mm;column-span:all;}
+  .prhead h2{font-size:13pt;margin:0;}
+  .prhead div{font-size:8.6pt;color:#444;margin-top:1mm;}
+  .pq{margin-bottom:2.6mm;}
+  .pq .pt{font-size:7.6pt;color:#666;}
+  .pq .pe{font-size:8.8pt;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>בוחן תרגול — Industry 4.0</h1>
+  <div class="sub" id="sub"></div>
+  <div class="aids">
+    <a class="aid" href="https://bohanyzahal-cyber.github.io/industry40-glossary/" target="_blank" rel="noopener">
+      <i>📖</i><span><b>המילון והשאלות של הכיתה</b> · האפליקציה המשותפת, רק מה שהמרצה אישר</span>
+    </a>
+  </div>
+</header>
+<div id="app"></div>
+<div id="print"></div>
+<div class="foot" style="text-align:center;color:var(--muted);font-size:12px;margin-top:24px;">
+  לתרגול לימודי בלבד · נבנה ממצגות ההרצאות, מהקלטותיהן ומהמילון שאושר בקורס
+</div>
+</div>
+<script>
+/*__BANK__*/
+(function(){
+"use strict";
+var LET=["א","ב","ג","ד"];
+var SRC_META={
+  "שאלות הכיתה":{bg:"var(--warnBg)",fg:"var(--warnTx)",full:"שאלת הכיתה · אושרה בידי המרצה"},
+  "מצגת":{bg:"var(--clsBg)",fg:"var(--clsTx)",full:"ממצגת ההרצאה"},
+  "הרצאה":{bg:"var(--clsBg)",fg:"var(--clsTx)",full:"מהקלטת ההרצאה"},
+  "מילון":{bg:"var(--surface2)",fg:"var(--muted)",full:"ממילון המושגים המאושר"},
+  "מאמר":{bg:"var(--surface2)",fg:"var(--muted)",full:"ממאמר הקריאה"}
+};
+var OUT_OF_SCOPE="__none__";
+var app=document.getElementById("app");
+var TOPICS=[]; (function(){var s={};BANK.forEach(function(b){if(!s[b.t]){s[b.t]=1;TOPICS.push(b.t);}}); })();
+var SOURCES=[]; (function(){var s={};BANK.forEach(function(b){if(!s[b.s]){s[b.s]=1;SOURCES.push(b.s);}}); })();
+
+var sel={topics:TOPICS.slice(),src:"exam",mode:"practice",shuffle:true,minutes:0,count:25,pcount:20,balanced:true};
+var quiz=[],idx=0,score=0,answered=false,wrong=[],ansMap=[],timer=null,timeLeft=0;
+
+function E(tag,attr,html){var e=document.createElement(tag);if(attr)for(var k in attr)e.setAttribute(k,attr[k]);if(html!=null)e.innerHTML=html;return e;}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+/* היקפים. "שאלות הכיתה" הן השאלות שהסטודנטים כתבו והמרצה אישר באפליקציה
+   המשותפת. המרצה אמר בהרצאה הראשונה ששאלות איכותיות ייכנסו למבחן, ולכן
+   הן הקרובות ביותר לנוסח האמיתי. */
+var SCOPE={
+  core:{name:"שאלות הכיתה",  hint:"השאלות שהמרצה אישר באפליקציה של הכיתה. לדבריו, שאלות איכותיות ייכנסו למבחן",
+        f:function(s){return s==="שאלות הכיתה";}},
+  exam:{name:"כל החומר",     hint:"כל ההרצאות: מצגות, הקלטות, המילון המאושר ומאמר הקריאה, יחד עם שאלות הכיתה",
+        f:function(){return true;}}
+};
+function srcOK(s){ return SCOPE[sel.src] ? SCOPE[sel.src].f(s) : s===sel.src; }
+function filterBank(){return BANK.filter(function(x){return sel.topics.indexOf(x.t)>=0 && srcOK(x.s);});}
+function countScope(k){return BANK.filter(function(x){return SCOPE[k].f(x.s);}).length;}
+
+/* אחרי הגדרת SCOPE — הכותרת מונה את שאלות ההיקף, לא את כל המאגר. */
+document.getElementById("sub").textContent =
+  BANK.length+" שאלות מכל ההרצאות. המבחן: אמריקאי, 20–30 שאלות מכל ההרצאות, בחומר פתוח מודפס בלבד. ציון עובר: 60.";
+/* מערבב את סדר התשובות בכל שאלה, כדי שהתשובה הנכונה לא תהיה תמיד באותו מקום */
+function prepQ(q){
+  var order=shuffle([0,1,2,3]);
+  var opts=order.map(function(i){return q.o[i];});
+  return {t:q.t,s:q.s,q:q.q,o:opts,c:order.indexOf(q.c),e:q.e};
+}
+function buildQuiz(){
+  var arr=filterBank().map(prepQ);
+  if(sel.shuffle)shuffle(arr);
+  return arr;
+}
+function srcBg(s){return (SRC_META[s]||{}).bg||"var(--surface2)";}
+function srcFg(s){return (SRC_META[s]||{}).fg||"var(--muted)";}
+function countBy(key,val){return BANK.filter(function(b){return b[key]===val;}).length;}
+function fmt(s){var m=Math.floor(s/60),x=s%60;return m+":"+(x<10?"0":"")+x;}
+
+/* ---------- theme ---------- */
+function initTheme(){
+  var t=null;try{t=localStorage.getItem("i40q_theme");}catch(e){}
+  if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);
+}
+function toggleTheme(){
+  var cur=document.documentElement.getAttribute("data-theme");
+  var isDark = cur==="dark" || (cur!=="light" && window.matchMedia && window.matchMedia("(prefers-color-scheme:dark)").matches);
+  var nx=isDark?"light":"dark";
+  document.documentElement.setAttribute("data-theme",nx);
+  try{localStorage.setItem("i40q_theme",nx);}catch(e){}
+}
+initTheme();
+
+/* ---------- setup screen ---------- */
+function setup(){
+  stopTimer();
+  app.innerHTML="";
+  var c=E("div",{"class":"card"});
+
+  c.appendChild(E("div",{"class":"note"},
+    "<b>המבחן: כ-20–30 שאלות אמריקאיות מכל ההרצאות.</b> החומר פתוח, אבל מודפס בלבד: אין מחשב ואין טלפון באולם. "+
+    "המרצה הדגיש שזה מבחן הבנה ולא זיכרון, ושהוא ממוקד במקרי הבוחן.<br>"+
+    "<b>איך לתרגל:</b> ב<b>מצב תרגול</b> מקבלים משוב והסבר אחרי כל שאלה, ובסוף הסבב אפשר לתרגל רק את השגויות. "+
+    "ב<b>סימולציית מבחן</b> עונים על 25 שאלות מפוזרות בין ההרצאות, ורק בסוף מקבלים ציון וסקירה של כל שגיאה.<br>"+
+    "<b>מאיפה להתחיל:</b> בהיקף <b>שאלות הכיתה</b>. אלה השאלות שהמרצה כבר אישר."));
+
+  /* mode */
+  var row1=E("div",{"class":"toolbar"});
+  row1.appendChild(E("span",{"class":"lbl"},"מצב:"));
+  [["practice","תרגול עם הסברים"],["exam","סימולציית מבחן"]].forEach(function(m){
+    var b=E("button",{"class":"chip"+(sel.mode===m[0]?" active":"")},m[1]);
+    b.onclick=function(){sel.mode=m[0];setup();};
+    row1.appendChild(b);
+  });
+  var sp=E("span",{"class":"spacer"});row1.appendChild(sp);
+  var th=E("button",{"class":"iconbtn"},"מצב כהה / בהיר");
+  th.onclick=toggleTheme;row1.appendChild(th);
+  c.appendChild(row1);
+
+  /* topics */
+  var row2=E("div",{"class":"toolbar"});
+  row2.appendChild(E("span",{"class":"lbl"},"נושאים:"));
+  var allOn=sel.topics.length===TOPICS.length;
+  var ball=E("button",{"class":"chip"+(allOn?" active":"")},"הכל");
+  ball.onclick=function(){sel.topics=allOn?[]:TOPICS.slice();setup();};
+  row2.appendChild(ball);
+  TOPICS.forEach(function(t){
+    var on=sel.topics.indexOf(t)>=0;
+    var b=E("button",{"class":"chip"+(on?" active":"")},t+" <small>"+countBy("t",t)+"</small>");
+    b.onclick=function(){
+      var i=sel.topics.indexOf(t);
+      if(i>=0)sel.topics.splice(i,1);else sel.topics.push(t);
+      setup();
+    };
+    row2.appendChild(b);
+  });
+  c.appendChild(row2);
+
+  /* היקף לימוד */
+  var row0=E("div",{"class":"toolbar"});
+  row0.appendChild(E("span",{"class":"lbl"},"היקף:"));
+  ["core","exam"].forEach(function(k){
+    var b=E("button",{"class":"chip"+(sel.src===k?" active":"")},
+      SCOPE[k].name+" <small>"+countScope(k)+"</small>");
+    b.onclick=function(){sel.src=k;setup();};
+    row0.appendChild(b);
+  });
+  /* בעבר הופיעו כאן גם כפתורים לכל מקור בנפרד. הם היו כפילות של
+     ההיקפים ורק הוסיפו רעש, ולכן נמחקו. */
+  c.appendChild(row0);
+  if(SCOPE[sel.src])
+    c.appendChild(E("div",{"class":"scopehint"},SCOPE[sel.src].hint));
+
+  /* options */
+  var row4=E("div",{"class":"toolbar"});
+  row4.appendChild(E("span",{"class":"lbl"},"אפשרויות:"));
+  var sh=E("button",{"class":"chip"+(sel.shuffle?" active":"")},"ערבוב שאלות");
+  sh.onclick=function(){sel.shuffle=!sel.shuffle;setup();};
+  row4.appendChild(sh);
+  if(sel.mode==="practice"){
+    /* אורך סבב: בלי הגבלה צריך לענות על כל המאגר כדי להגיע למסך התוצאות,
+       ורק שם מופיע הכפתור לתרגול השגויות. סבב קצר הופך אותו לשמיש. */
+    [[20,"סבב של 20"],[40,"סבב של 40"],[0,"כל השאלות"]].forEach(function(n){
+      var b=E("button",{"class":"chip"+(sel.pcount===n[0]?" active":"")},n[1]);
+      b.onclick=function(){sel.pcount=n[0];setup();};
+      row4.appendChild(b);
+    });
+  }
+  if(sel.mode==="exam"){
+    var bal=E("button",{"class":"chip"+(sel.balanced?" active":"")},"פריסה מאוזנת בין נושאים");
+    bal.onclick=function(){sel.balanced=!sel.balanced;setup();};
+    row4.appendChild(bal);
+    [[25,"25 שאלות, כמו במבחן"],[40,"40 שאלות"],[0,"הכל"]].forEach(function(n){
+      var b=E("button",{"class":"chip"+(sel.count===n[0]?" active":"")},n[1]);
+      b.onclick=function(){sel.count=n[0];setup();};
+      row4.appendChild(b);
+    });
+    [[0,"בלי שעון"],[30,"30 דק'"],[45,"45 דק'"],[60,"60 דק'"]].forEach(function(m){
+      var b=E("button",{"class":"chip"+(sel.minutes===m[0]?" active":"")},m[1]);
+      b.onclick=function(){sel.minutes=m[0];setup();};
+      row4.appendChild(b);
+    });
+  }
+  c.appendChild(row4);
+
+  var n=filterBank().length;
+  var info=E("div",{"class":"stats"});
+  info.innerHTML="<span>נבחרו <b>"+n+"</b> שאלות</span>";
+  c.appendChild(info);
+
+  var go=E("button",{"class":"btn btn-pri"},
+    sel.mode==="exam"?"התחלת סימולציית מבחן":"התחלת תרגול");
+  go.style.width="100%";
+  if(n===0){go.disabled=true;go.textContent="בחרו לפחות נושא אחד";}
+  go.onclick=function(){ sel.mode==="exam"?examStart():practiceStart(); };
+  c.appendChild(go);
+
+  /* הדפסה — המבחן פתוח-חומר, ולכן אפשר להיכנס איתו לכיתה */
+  var pr=E("div",{"class":"toolbar"});
+  pr.style.marginTop="12px";
+  pr.appendChild(E("span",{"class":"lbl"},"הדפסה:"));
+  var p1=E("button",{"class":"iconbtn"},"🖨 השאלות עם התשובות");
+  p1.onclick=function(){printSheet(true);};
+  var p2=E("button",{"class":"iconbtn"},"🖨 השאלות בלבד");
+  p2.onclick=function(){printSheet(false);};
+  p1.disabled=p2.disabled=n===0;
+  pr.appendChild(p1);pr.appendChild(p2);
+  c.appendChild(pr);
+  c.appendChild(E("div",{"class":"scopehint"},
+    "מדפיס את "+n+" השאלות שנבחרו למעלה — לפי הנושאים וההיקף. "+
+    "אפשר להכניס את הדף המודפס למבחן, כי החומר פתוח."));
+
+  app.appendChild(c);
+}
+
+/* ---------- גיליון הדפסה ---------- */
+/* נבנה אל תוך #print, שמוסתר במסך ומוצג רק בהדפסה. כך אין צורך
+   בחלון חדש (שחוסמי חלונות קופצים עוצרים) והעיצוב נשאר בקובץ אחד. */
+function printSheet(withAnswers){
+  var arr=filterBank();
+  if(!arr.length)return;
+  var box=document.getElementById("print");
+  box.className = withAnswers ? "" : "cols";   /* בלי תשובות — צפוף יותר, שתי עמודות */
+  var esc=function(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML;};
+  var h='<div class="prhead"><h2>בוחן תרגול — Industry 4.0</h2><div>'+
+        arr.length+" שאלות · "+(SCOPE[sel.src]?SCOPE[sel.src].name:sel.src)+
+        " · "+(withAnswers?"עם תשובות והסברים":"ללא תשובות")+"</div></div>";
+  arr.forEach(function(q,i){
+    h+='<div class="pq"><div class="pt">'+esc(q.t)+
+       (q.s===OUT_OF_SCOPE?' · <b>⚠ מחוץ להיקף המבחן</b>':'')+'</div>'+
+       '<div><span class="pn">'+(i+1)+'.</span> '+esc(q.q)+'</div>';
+    q.o.forEach(function(o,k){ h+='<div class="po">'+LET[k]+". "+esc(o)+"</div>"; });
+    if(withAnswers)
+      h+='<div class="po pa">✔ '+LET[q.c]+". "+esc(q.o[q.c])+'</div>'+
+         '<div class="po pe">'+esc(q.e)+"</div>";
+    h+="</div>";
+  });
+  box.innerHTML=h;
+  window.print();
+}
+
+/* ---------- shared bits ---------- */
+function bar(frac){
+  var b=E("div",{"class":"bar"});
+  b.innerHTML='<i style="width:'+(frac*100)+'%"></i>';
+  return b;
+}
+function metaRow(q){
+  var r=E("div",{"class":"qmeta"});
+  r.innerHTML='<span class="pill">'+q.t+'</span><span class="pill" style="background:'+srcBg(q.s)+';color:'+srcFg(q.s)+'">'+((SRC_META[q.s]||{}).full||q.s)+'</span>';
+  return r;
+}
+function topBar(extraHtml){
+  var t=E("div",{"class":"toolbar"});
+  var back=E("button",{"class":"iconbtn"},"→ חזרה להגדרות");
+  back.onclick=function(){
+    if(!timer||back.getAttribute("data-sure")){setup();return;}
+    back.setAttribute("data-sure","1");back.textContent="לחצו שוב כדי לצאת — התשובות לא יישמרו";
+  };
+  t.appendChild(back);
+  t.appendChild(E("span",{"class":"spacer"}));
+  if(extraHtml)t.appendChild(E("span",{},extraHtml));
+  var th=E("button",{"class":"iconbtn"},"◐");
+  th.onclick=toggleTheme;t.appendChild(th);
+  return t;
+}
+
+/* ---------- practice mode ---------- */
+function practiceStart(){
+  quiz=buildQuiz();
+  /* אותה דגימה מאוזנת של המבחן — סבב קצר שמרוכז בשניים-שלושה נושאים
+     אינו מייצג, והמאגר אינו מאוזן בין הנושאים. */
+  if(sel.pcount&&quiz.length>sel.pcount)
+    quiz=shuffle(balancedPick(quiz,sel.pcount));
+  idx=0;score=0;wrong=[];ansMap=[];
+  pRender();
+}
+function pRender(){
+  if(idx>=quiz.length)return pResults();
+  var q=quiz[idx];
+  app.innerHTML="";
+  var c=E("div",{"class":"card"});
+  c.appendChild(topBar());
+  var st=E("div",{"class":"stats"});
+  function statsHtml(done){
+    var seen=idx+(done?1:0);
+    return "<span>שאלה <b>"+(idx+1)+"</b> / <b>"+quiz.length+"</b></span>"+
+      "<span>נכונות: <b>"+score+"</b></span>"+
+      "<span>שגויות: <b>"+wrong.length+"</b></span>"+
+      "<span class='spacer'></span><span>הצלחה: <b>"+(seen?Math.round(score/seen*100)+"%":"—")+"</b></span>";
+  }
+  st.innerHTML=statsHtml(false);
+  c.appendChild(st);
+  c.appendChild(bar(idx/quiz.length));
+  c.appendChild(metaRow(q));
+  c.appendChild(E("div",{"class":"qtext"},q.q));
+
+  var box=E("div");
+  answered=false;
+  q.o.forEach(function(txt,i){
+    var b=E("button",{"class":"opt"});
+    b.innerHTML='<span class="ltr">'+LET[i]+'</span><span>'+txt+'</span>';
+    b.onclick=function(){
+      if(answered)return;
+      answered=true;
+      var all=box.querySelectorAll(".opt");
+      for(var k=0;k<all.length;k++)all[k].className="opt locked";
+      all[q.c].className="opt correct locked";
+      if(i===q.c){score++;}
+      else{all[i].className="opt wrong locked";wrong.push(q);}
+      st.innerHTML=statsHtml(true);
+      var ex=E("div",{"class":"expl"});
+      ex.innerHTML='<span class="tag">'+(i===q.c?"נכון · ":"התשובה הנכונה: "+LET[q.c]+" · ")+'</span>'+q.e;
+      c.insertBefore(ex,navRow);
+      nextBtn.disabled=false;nextBtn.className="btn btn-pri";
+    };
+    box.appendChild(b);
+  });
+  c.appendChild(box);
+
+  var navRow=E("div",{"class":"nav"});
+  var nextBtn=E("button",{"class":"btn"},idx===quiz.length-1?"סיום וצפייה בציון":"השאלה הבאה ←");
+  nextBtn.disabled=true;
+  nextBtn.onclick=function(){idx++;pRender();};
+  var skip=E("button",{"class":"btn"},"דילוג");
+  skip.onclick=function(){idx++;pRender();};
+  navRow.appendChild(nextBtn);navRow.appendChild(skip);
+  c.appendChild(navRow);
+  app.appendChild(c);
+  window.scrollTo(0,0);
+}
+function pResults(){
+  results(score,quiz.length,wrong,practiceStart,function(){
+    quiz=wrong.slice();if(sel.shuffle)shuffle(quiz);
+    idx=0;score=0;wrong=[];pRender();
+  },null);
+}
+
+/* ---------- exam mode ---------- */
+/* דגימה מאוזנת בין נושאים: המאגר אינו מאוזן (יש נושאים עם יותר שאלות
+   מאחרים, לפי כמה חומר יש עליהם), ולכן דגימה אקראית פשוטה תיתן מבחן
+   שרובו שניים-שלושה נושאים. כאן לוקחים לסירוגין מכל נושא בתורו. */
+function balancedPick(arr,n){
+  var byTopic={},order=[];
+  arr.forEach(function(q){ if(!byTopic[q.t]){byTopic[q.t]=[];order.push(q.t);} byTopic[q.t].push(q); });
+  var out=[],i=0;
+  while(out.length<n){
+    var added=false;
+    for(var k=0;k<order.length&&out.length<n;k++){
+      var pool=byTopic[order[k]];
+      if(i<pool.length){ out.push(pool[i]); added=true; }
+    }
+    if(!added)break;      /* מוצו כל הנושאים */
+    i++;
+  }
+  return out;
+}
+function examStart(){
+  quiz=buildQuiz();
+  if(sel.count&&quiz.length>sel.count)
+    quiz=sel.balanced?shuffle(balancedPick(quiz,sel.count)):quiz.slice(0,sel.count);
+  idx=0;ansMap=new Array(quiz.length);
+  timeLeft=sel.minutes*60;
+  if(sel.minutes)startTimer();
+  eRender();
+}
+function startTimer(){
+  stopTimer();
+  timer=setInterval(function(){
+    timeLeft--;
+    var el=document.getElementById("clock");
+    if(el)el.textContent=fmt(timeLeft);
+    if(timeLeft<=0){stopTimer();examSubmit(true);}
+  },1000);
+}
+function stopTimer(){if(timer){clearInterval(timer);timer=null;}}
+function eRender(){
+  var q=quiz[idx];
+  app.innerHTML="";
+  var c=E("div",{"class":"card"});
+  c.appendChild(topBar(sel.minutes?'זמן שנותר: <span class="clock" id="clock">'+fmt(timeLeft)+'</span>':""));
+  var nAns=0;for(var i=0;i<ansMap.length;i++)if(ansMap[i]!=null)nAns++;
+  var st=E("div",{"class":"stats"});
+  st.innerHTML="<span>שאלה <b>"+(idx+1)+"</b> / <b>"+quiz.length+"</b></span><span>נענו: <b>"+nAns+"</b></span>";
+  c.appendChild(st);
+  c.appendChild(bar(nAns/quiz.length));
+  c.appendChild(metaRow(q));
+  c.appendChild(E("div",{"class":"qtext"},q.q));
+
+  var box=E("div");
+  q.o.forEach(function(txt,i){
+    var b=E("button",{"class":"opt"+(ansMap[idx]===i?" picked":"")});
+    b.innerHTML='<span class="ltr">'+LET[i]+'</span><span>'+txt+'</span>';
+    b.onclick=function(){ansMap[idx]=i;eRender();};
+    box.appendChild(b);
+  });
+  c.appendChild(box);
+
+  var nav=E("div",{"class":"nav"});
+  var prev=E("button",{"class":"btn"},"→ הקודמת");
+  prev.disabled=idx===0;prev.onclick=function(){idx--;eRender();};
+  var next=E("button",{"class":"btn btn-pri"},"הבאה ←");
+  next.disabled=idx===quiz.length-1;next.onclick=function(){idx++;eRender();};
+  nav.appendChild(prev);nav.appendChild(next);
+  c.appendChild(nav);
+
+  c.appendChild(E("div",{"class":"ptitle",style:"margin-top:16px"},"מפת שאלות — לחצו למעבר"));
+  var pal=E("div",{"class":"palette"});
+  quiz.forEach(function(_,i){
+    var b=E("button",{"class":"pbtn"+(ansMap[i]!=null?" ans":"")+(i===idx?" cur":"")},String(i+1));
+    b.onclick=function(){idx=i;eRender();};
+    pal.appendChild(b);
+  });
+  c.appendChild(pal);
+
+  var sub=E("button",{"class":"btn btn-pri"},"הגשת המבחן");
+  sub.style.width="100%";sub.style.marginTop="14px";
+  sub.onclick=function(){
+    var un=quiz.length-nAns;
+    if(un>0&&!sub.getAttribute("data-sure")){
+      sub.setAttribute("data-sure","1");
+      sub.textContent="נותרו "+un+" שאלות ללא מענה — לחצו שוב כדי להגיש";
+      return;
+    }
+    examSubmit(false);
+  };
+  c.appendChild(sub);
+  app.appendChild(c);
+  window.scrollTo(0,0);
+}
+function examSubmit(auto){
+  stopTimer();
+  var sc=0,wr=[];
+  quiz.forEach(function(q,i){ if(ansMap[i]===q.c)sc++; else wr.push({q:q,given:ansMap[i]}); });
+  results(sc,quiz.length,wr.map(function(x){return x.q;}),examStart,null,wr,auto);
+}
+
+/* ---------- results ---------- */
+function results(sc,total,wr,onAgain,onRetryWrong,detail,auto){
+  stopTimer();
+  app.innerHTML="";
+  var pct=total?Math.round(sc/total*100):0;
+  var c=E("div",{"class":"card result"});
+  if(auto)c.appendChild(E("div",{"class":"note"},"<b>הזמן נגמר</b> — המבחן הוגש אוטומטית."));
+  c.appendChild(E("div",{"class":"big"},pct));
+  var g = pct>=90?"מצוין — שליטה מלאה בחומר":
+          pct>=80?"טוב מאוד":
+          pct>=70?"טוב — כדאי לחזור על הנושאים החלשים":
+          pct>=60?"עובר — מומלץ לחזור ולתרגל":
+                  "מתחת לציון עובר — כדאי לחזור על החומר ולתרגל שוב";
+  c.appendChild(E("div",{"class":"grade"},sc+" מתוך "+total+" · "+g));
+
+  var nav=E("div",{"class":"nav"});
+  var again=E("button",{"class":"btn btn-pri"},"סבב חדש");
+  again.onclick=onAgain;nav.appendChild(again);
+  if(onRetryWrong&&wr.length){
+    var rw=E("button",{"class":"btn"},"תרגול "+wr.length+" השגויות");
+    rw.onclick=onRetryWrong;nav.appendChild(rw);
+  }
+  var home=E("button",{"class":"btn"},"הגדרות");
+  home.onclick=setup;nav.appendChild(home);
+  c.appendChild(nav);
+  app.appendChild(c);
+
+  if(detail&&detail.length){
+    var d=E("div",{"class":"card"});
+    d.appendChild(E("div",{"class":"ptitle"},"סקירת "+detail.length+" השאלות שנענו לא נכון"));
+    detail.forEach(function(x){
+      var r=E("div",{"class":"rev"});
+      var given = x.given==null?"<i>לא נענתה</i>":LET[x.given]+". "+x.q.o[x.given];
+      r.innerHTML='<div class="rq">'+x.q.q+'</div>'+
+        '<div class="ra">התשובה שלך: '+given+'</div>'+
+        '<div class="rc">התשובה הנכונה: '+LET[x.q.c]+". "+x.q.o[x.q.c]+'</div>'+
+        '<div style="margin-top:6px;color:var(--muted)">'+x.q.e+'</div>';
+      d.appendChild(r);
+    });
+    app.appendChild(d);
+  } else if(wr.length){
+    var d2=E("div",{"class":"card"});
+    d2.appendChild(E("div",{"class":"ptitle"},"נושאים לחזרה"));
+    var byTopic={};
+    wr.forEach(function(q){byTopic[q.t]=(byTopic[q.t]||0)+1;});
+    var ul=E("div",{"class":"toolbar"});
+    Object.keys(byTopic).forEach(function(t){
+      ul.appendChild(E("span",{"class":"pill"},t+" — "+byTopic[t]+" שגיאות"));
+    });
+    d2.appendChild(ul);
+    app.appendChild(d2);
+  }
+  window.scrollTo(0,0);
+}
+
+setup();
+})();
+</script>
+</body>
+</html>
