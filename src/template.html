@@ -191,7 +191,7 @@ var TOPICS=[]; (function(){var s={};BANK.forEach(function(b){if(!s[b.t]){s[b.t]=
 var SOURCES=[]; (function(){var s={};BANK.forEach(function(b){if(!s[b.s]){s[b.s]=1;SOURCES.push(b.s);}}); })();
 
 var sel={topics:TOPICS.slice(),src:"exam",mode:"practice",shuffle:true,minutes:0,count:25,pcount:20,balanced:true};
-var quiz=[],idx=0,score=0,answered=false,wrong=[],ansMap=[],timer=null,timeLeft=0;
+var quiz=[],idx=0,ansMap=[],timer=null,timeLeft=0;   /* ansMap[i] = התשובה שנבחרה לשאלה i */
 
 function E(tag,attr,html){var e=document.createElement(tag);if(attr)for(var k in attr)e.setAttribute(k,attr[k]);if(html!=null)e.innerHTML=html;return e;}
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
@@ -416,75 +416,113 @@ function topBar(extraHtml){
 }
 
 /* ---------- practice mode ---------- */
+/* אפשר לעבור בחופשיות בין השאלות: «הקודמת», «הבאה» ומפת שאלות. תשובה שנבחרה נשמרת,
+   וכשחוזרים לשאלה רואים שוב את הסימון ואת ההסבר. */
 function practiceStart(){
   quiz=buildQuiz();
   /* אותה דגימה מאוזנת של המבחן — סבב קצר שמרוכז בשניים-שלושה נושאים
      אינו מייצג, והמאגר אינו מאוזן בין הנושאים. */
   if(sel.pcount&&quiz.length>sel.pcount)
     quiz=shuffle(balancedPick(quiz,sel.pcount));
-  idx=0;score=0;wrong=[];ansMap=[];
-  pRender();
+  pBegin();
 }
-function pRender(){
-  if(idx>=quiz.length)return pResults();
-  var q=quiz[idx];
+function pBegin(){idx=0;ansMap=new Array(quiz.length);pRender();}
+function pTally(){
+  var ok=0,bad=[],n=0;
+  quiz.forEach(function(q,i){ if(ansMap[i]==null)return; n++; if(ansMap[i]===q.c)ok++; else bad.push(q); });
+  return {ok:ok,bad:bad,n:n};
+}
+/* כפתור שמסיים את הסבב. אם נשארו שאלות בלי מענה, הלחיצה הראשונה רק מזהירה —
+   כמו בהגשת המבחן, בלי חלון קופץ. */
+function pFinish(b,T){
+  b.onclick=function(){
+    var un=quiz.length-T.n;
+    if(un>0&&!b.getAttribute("data-sure")){
+      b.setAttribute("data-sure","1");
+      b.textContent="נותרו "+un+" שאלות בלי מענה — לחצו שוב כדי לסיים";
+      return;
+    }
+    pResults();
+  };
+}
+function pRender(keepScroll){
+  var q=quiz[idx],a=ansMap[idx],done=a!=null,T=pTally(),last=idx===quiz.length-1;
   app.innerHTML="";
   var c=E("div",{"class":"card"});
   c.appendChild(topBar());
   var st=E("div",{"class":"stats"});
-  function statsHtml(done){
-    var seen=idx+(done?1:0);
-    return "<span>שאלה <b>"+(idx+1)+"</b> / <b>"+quiz.length+"</b></span>"+
-      "<span>נכונות: <b>"+score+"</b></span>"+
-      "<span>שגויות: <b>"+wrong.length+"</b></span>"+
-      "<span class='spacer'></span><span>הצלחה: <b>"+(seen?Math.round(score/seen*100)+"%":"—")+"</b></span>";
-  }
-  st.innerHTML=statsHtml(false);
+  st.innerHTML="<span>שאלה <b>"+(idx+1)+"</b> / <b>"+quiz.length+"</b></span>"+
+    "<span>נכונות: <b>"+T.ok+"</b></span>"+
+    "<span>שגויות: <b>"+T.bad.length+"</b></span>"+
+    "<span class='spacer'></span><span>הצלחה: <b>"+(T.n?Math.round(T.ok/T.n*100)+"%":"—")+"</b></span>";
   c.appendChild(st);
-  c.appendChild(bar(idx/quiz.length));
+  c.appendChild(bar(T.n/quiz.length));
   c.appendChild(metaRow(q));
   c.appendChild(E("div",{"class":"qtext"},q.q));
 
   var box=E("div");
-  answered=false;
   q.o.forEach(function(txt,i){
-    var b=E("button",{"class":"opt"});
+    var cls="opt";
+    if(done)cls+=" locked"+(i===q.c?" correct":i===a?" wrong":"");
+    var b=E("button",{"class":cls});
     b.innerHTML='<span class="ltr">'+LET[i]+'</span><span>'+txt+'</span>';
-    b.onclick=function(){
-      if(answered)return;
-      answered=true;
-      var all=box.querySelectorAll(".opt");
-      for(var k=0;k<all.length;k++)all[k].className="opt locked";
-      all[q.c].className="opt correct locked";
-      if(i===q.c){score++;}
-      else{all[i].className="opt wrong locked";wrong.push(q);}
-      st.innerHTML=statsHtml(true);
-      var ex=E("div",{"class":"expl"});
-      ex.innerHTML='<span class="tag">'+(i===q.c?"נכון · ":"התשובה הנכונה: "+LET[q.c]+" · ")+'</span>'+q.e;
-      c.insertBefore(ex,navRow);
-      nextBtn.disabled=false;nextBtn.className="btn btn-pri";
-    };
+    b.onclick=function(){ if(ansMap[idx]!=null)return; ansMap[idx]=i; pRender(true); };
     box.appendChild(b);
   });
   c.appendChild(box);
+  if(done){
+    var ex=E("div",{"class":"expl"});
+    ex.innerHTML='<span class="tag">'+(a===q.c?"נכון · ":"התשובה הנכונה: "+LET[q.c]+" · ")+'</span>'+q.e;
+    c.appendChild(ex);
+  }
 
-  var navRow=E("div",{"class":"nav"});
-  var nextBtn=E("button",{"class":"btn"},idx===quiz.length-1?"סיום וצפייה בציון":"השאלה הבאה ←");
-  nextBtn.disabled=true;
-  nextBtn.onclick=function(){idx++;pRender();};
-  var skip=E("button",{"class":"btn"},"דילוג");
-  skip.onclick=function(){idx++;pRender();};
-  navRow.appendChild(nextBtn);navRow.appendChild(skip);
-  c.appendChild(navRow);
+  var nav=E("div",{"class":"nav"});
+  var prev=E("button",{"class":"btn"},"→ הקודמת");
+  prev.disabled=idx===0;
+  prev.onclick=function(){idx--;pRender();};
+  var next=E("button",{"class":"btn"+(done?" btn-pri":"")},last?"סיום וצפייה בציון":done?"השאלה הבאה ←":"דילוג ←");
+  if(last)pFinish(next,T); else next.onclick=function(){idx++;pRender();};
+  nav.appendChild(prev);nav.appendChild(next);
+  c.appendChild(nav);
+
+  c.appendChild(E("div",{"class":"ptitle",style:"margin-top:16px"},
+    "מפת שאלות — לחצו כדי לעבור לשאלה · ירוק: נכונה · אדום: שגויה"));
+  var pal=E("div",{"class":"palette"});
+  quiz.forEach(function(qq,i){
+    var m=ansMap[i]==null?"":ansMap[i]===qq.c?" ok":" bad";
+    var b=E("button",{"class":"pbtn"+m+(i===idx?" cur":"")},String(i+1));
+    b.onclick=function(){idx=i;pRender();};
+    pal.appendChild(b);
+  });
+  c.appendChild(pal);
+  if(!last){
+    var fin=E("button",{"class":"btn"},"סיום הסבב וצפייה בציון");
+    fin.style.width="100%";fin.style.marginTop="14px";
+    pFinish(fin,T);
+    c.appendChild(fin);
+  }
   app.appendChild(c);
-  window.scrollTo(0,0);
+  if(!keepScroll)window.scrollTo(0,0);
 }
 function pResults(){
-  results(score,quiz.length,wrong,practiceStart,function(){
-    quiz=wrong.slice();if(sel.shuffle)shuffle(quiz);
-    idx=0;score=0;wrong=[];pRender();
+  var T=pTally();
+  results(T.ok,quiz.length,T.bad,practiceStart,function(){
+    quiz=T.bad.slice();if(sel.shuffle)shuffle(quiz);
+    pBegin();
   },null);
 }
+
+/* מקלדת, במסך של שאלה: חץ שמאלה = הבאה, חץ ימינה = הקודמת (האתר מימין לשמאל), 1-4 = בחירת תשובה */
+document.addEventListener("keydown",function(ev){
+  if(!app.querySelector(".qtext")||ev.ctrlKey||ev.metaKey||ev.altKey)return;
+  var bs=app.querySelectorAll(".nav .btn");
+  if(ev.key==="ArrowLeft"&&bs[1]&&!bs[1].disabled){ev.preventDefault();bs[1].click();}
+  else if(ev.key==="ArrowRight"&&bs[0]&&!bs[0].disabled){ev.preventDefault();bs[0].click();}
+  else if(/^[1-4]$/.test(ev.key)){
+    var o=app.querySelectorAll(".opt")[+ev.key-1];
+    if(o&&o.className.indexOf("locked")<0){ev.preventDefault();o.click();}
+  }
+});
 
 /* ---------- exam mode ---------- */
 /* דגימה מאוזנת בין נושאים: המאגר אינו מאוזן (יש נושאים עם יותר שאלות
@@ -554,7 +592,7 @@ function eRender(){
   nav.appendChild(prev);nav.appendChild(next);
   c.appendChild(nav);
 
-  c.appendChild(E("div",{"class":"ptitle",style:"margin-top:16px"},"מפת שאלות — לחצו למעבר"));
+  c.appendChild(E("div",{"class":"ptitle",style:"margin-top:16px"},"מפת שאלות — לחצו כדי לעבור לשאלה · מסומנות: שאלות שנענו"));
   var pal=E("div",{"class":"palette"});
   quiz.forEach(function(_,i){
     var b=E("button",{"class":"pbtn"+(ansMap[i]!=null?" ans":"")+(i===idx?" cur":"")},String(i+1));
