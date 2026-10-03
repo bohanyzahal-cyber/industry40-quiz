@@ -7,6 +7,9 @@ Each bank in banks/*.json looks like:
 The correct answer is always written first. The build shuffles the options with a
 seed taken from the question text, so the answer letter is spread evenly and stays
 stable between builds. The app shuffles again on every round.
+
+Banks in banks-local/*.json have the same shape and are not committed. Their questions
+go only into the copy in the course folder, never into index.html or the README.
 """
 import glob, hashlib, json, os, random, re, sys
 
@@ -15,10 +18,9 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)            # .../industry40-quiz
 COURSE = os.path.dirname(REPO)          # the course folder
-TARGETS = [
-    os.path.join(REPO, "index.html"),
-    os.path.join(COURSE, "בוחן תרגול - Industry 4.0.html"),
-]
+PUBLIC = os.path.join(REPO, "index.html")
+# The copy in the course folder also gets the questions of banks-local/.
+LOCAL_COPY = os.path.join(COURSE, "בוחן תרגול - Industry 4.0.html")
 # The same page for publishing as a claude.ai Artifact (not committed).
 ARTIFACT = os.path.join(REPO, "artifact-build", "page.html")
 
@@ -47,23 +49,26 @@ def length_rank(lengths):
     return "middle"
 
 
-def load_banks():
+def load_banks(local=False):
     banks = []
-    for path in sorted(glob.glob(os.path.join(HERE, "banks", "*.json"))):
-        with open(path, encoding="utf-8") as f:
-            data = json.load(f)
-        banks.append((os.path.basename(path), data))
+    for folder in ("banks", "banks-local") if local else ("banks",):
+        for path in sorted(glob.glob(os.path.join(HERE, folder, "*.json"))):
+            with open(path, encoding="utf-8") as f:
+                data = json.load(f)
+            name = os.path.basename(path)
+            banks.append((name if folder == "banks" else folder + "/" + name, data))
     return banks
 
 
-def build():
+def build(local=False):
+    """local=True adds the uncommitted banks of banks-local/ (for the course-folder copy)."""
     problems, warnings = [], []
     out, seen = [], {}
     by_topic, by_src, letters = {}, {}, [0, 0, 0, 0]
     # Length of the correct option against the distractors, per group of questions.
     # With four options, chance is about 25% longest and 25% shortest.
     ranks = {}
-    banks = load_banks()
+    banks = load_banks(local)
     order = [b["topic"] for _, b in banks if b.get("topic")]
     for fname, bank in banks:
         for n, item in enumerate(bank["items"], 1):
@@ -135,17 +140,29 @@ def main():
               f"shortest {r['shortest']} ({r['shortest'] / total:.0%}), middle {r['middle']}")
     for w in warnings:
         print("  warn:", w)
+    # The course-folder copy: the same questions plus the local-only banks, if there are any.
+    full = bank
+    if glob.glob(os.path.join(HERE, "banks-local", "*.json")):
+        full, local_problems, local_warnings = build(local=True)[:3]
+        print(f"\nwith banks-local: {len(full)} questions ({len(full) - len(bank)} local only)")
+        for w in local_warnings:
+            print("  warn (with local):", w)
+        problems += [p for p in local_problems if p not in problems]
     if problems:
         print("\nPROBLEMS — nothing was written:")
         for p in problems:
             print("  -", p)
         sys.exit(1)
     tpl = open(os.path.join(HERE, "template.html"), encoding="utf-8").read()
-    js = "var BANK=" + json.dumps(bank, ensure_ascii=False, separators=(",", ":")) + ";"
-    page = tpl.replace("/*__BANK__*/", js)
-    for t in TARGETS:
+
+    def render(questions):
+        js = "var BANK=" + json.dumps(questions, ensure_ascii=False, separators=(",", ":")) + ";"
+        return tpl.replace("/*__BANK__*/", js)
+
+    page = render(bank)
+    for t, content in ((PUBLIC, page), (LOCAL_COPY, render(full))):
         with open(t, "w", encoding="utf-8") as f:
-            f.write(page)
+            f.write(content)
         print("written:", t)
     os.makedirs(os.path.dirname(ARTIFACT), exist_ok=True)
     with open(ARTIFACT, "w", encoding="utf-8") as f:

@@ -12,3 +12,6 @@
 __pycache__/
 *.pyc
 artifact-build/
+
+# שאלות לעותק המקומי בלבד — לא מתפרסמות
+src/banks-local/
