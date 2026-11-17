@@ -193,7 +193,7 @@ var app=document.getElementById("app");
 var TOPICS=[]; (function(){var s={};BANK.forEach(function(b){if(!s[b.t]){s[b.t]=1;TOPICS.push(b.t);}}); })();
 var SOURCES=[]; (function(){var s={};BANK.forEach(function(b){if(!s[b.s]){s[b.s]=1;SOURCES.push(b.s);}}); })();
 
-var sel={topics:TOPICS.slice(),src:"exam",mode:"practice",shuffle:true,minutes:0,count:25,pcount:20,balanced:true};
+var sel={topics:TOPICS.slice(),src:"exam",mode:"practice",shuffle:true,minutes:0,count:20,pcount:20,balanced:true};
 var quiz=[],idx=0,ansMap=[],timer=null,timeLeft=0;   /* ansMap[i] = התשובה שנבחרה לשאלה i */
 
 function E(tag,attr,html){var e=document.createElement(tag);if(attr)for(var k in attr)e.setAttribute(k,attr[k]);if(html!=null)e.innerHTML=html;return e;}
@@ -213,7 +213,7 @@ function countScope(k){return BANK.filter(function(x){return SCOPE[k].f(x.s);}).
 
 /* אחרי הגדרת SCOPE — הכותרת מונה את שאלות ההיקף, לא את כל המאגר. */
 document.getElementById("sub").textContent =
-  BANK.length+" שאלות מכל ההרצאות. המבחן: אמריקאי, 20–30 שאלות מכל ההרצאות, בחומר פתוח מודפס בלבד. ציון עובר: 60.";
+  BANK.length+" שאלות מכל ההרצאות. המבחן: אמריקאי, 20 שאלות מכל ההרצאות, בחומר פתוח מודפס בלבד. ציון עובר: 60.";
 /* מערבב את סדר התשובות בכל שאלה, כדי שהתשובה הנכונה לא תהיה תמיד באותו מקום */
 function prepQ(q){
   var order=shuffle([0,1,2,3]);
@@ -251,10 +251,10 @@ function setup(){
   var c=E("div",{"class":"card"});
 
   c.appendChild(E("div",{"class":"note"},
-    "<b>המבחן: כ-20–30 שאלות אמריקאיות מכל ההרצאות.</b> החומר פתוח, אבל מודפס בלבד: אין מחשב ואין טלפון באולם. "+
+    "<b>המבחן: 20 שאלות אמריקאיות מכל ההרצאות.</b> החומר פתוח, אבל מודפס בלבד: אין מחשב ואין טלפון באולם. "+
     "המרצה הדגיש שזה מבחן הבנה ולא זיכרון, ושהוא ממוקד במקרי הבוחן.<br>"+
     "<b>איך לתרגל:</b> ב<b>מצב תרגול</b> מקבלים משוב והסבר אחרי כל שאלה, ובסוף הסבב אפשר לתרגל רק את השגויות. "+
-    "ב<b>סימולציית מבחן</b> עונים על 25 שאלות מפוזרות בין ההרצאות, ורק בסוף מקבלים ציון וסקירה של כל שגיאה.<br>"+
+    "ב<b>סימולציית מבחן</b> עונים על 20 שאלות מפוזרות בין ההרצאות, ורק בסוף מקבלים ציון וסקירה של כל שגיאה.<br>"+
     "<b>מאיפה להתחיל:</b> בהיקף <b>שאלות הכיתה</b>. אלה השאלות שהמרצה כבר אישר."));
 
   /* mode */
@@ -323,7 +323,7 @@ function setup(){
     var bal=E("button",{"class":"chip"+(sel.balanced?" active":"")},"פריסה מאוזנת בין נושאים");
     bal.onclick=function(){sel.balanced=!sel.balanced;setup();};
     row4.appendChild(bal);
-    [[25,"25 שאלות, כמו במבחן"],[40,"40 שאלות"],[0,"הכל"]].forEach(function(n){
+    [[20,"20 שאלות, כמו במבחן"],[40,"40 שאלות"],[0,"הכל"]].forEach(function(n){
       var b=E("button",{"class":"chip"+(sel.count===n[0]?" active":"")},n[1]);
       b.onclick=function(){sel.count=n[0];setup();};
       row4.appendChild(b);
